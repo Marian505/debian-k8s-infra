@@ -7,3 +7,6 @@ kubectl delete all --all --all-namespaces
 kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/v3.26.1/manifests/calico.yaml
 
 kubectl patch svc kong-kong-proxy -n kong -p '{"spec":{"externalIPs":["192.168.100.51"]}}'
+
+helmfile -e development apply
+helmfile -e development destroy
