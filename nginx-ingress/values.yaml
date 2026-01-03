@@ -1,0 +1,8 @@
+proxy:
+  # type: NodePort
+  http:
+    enabled: true
+    nodePort: 32080
+  tls:
+    enabled: true
+    nodePort: 32443

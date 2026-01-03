@@ -1,0 +1,66 @@
+environments:
+  development:
+    values:
+      - secrets/development.yaml
+---
+repositories:
+  # - name: bitnami
+  #   url: https://charts.bitnami.com/bitnami
+  - name: metallb
+    url: https://metallb.github.io/metallb
+  - name: ingress-nginx
+    url: https://kubernetes.github.io/ingress-nginx
+  - name: kong
+    url: https://charts.konghq.com
+
+releases:
+  - name: nginx-ingress
+    namespace: ingress-nginx
+    createNamespace: true
+    chart: ingress-nginx/ingress-nginx
+    values:
+      - nginx-ingress/values.yaml
+
+  # - name: metallb
+  #   namespace: metallb-system
+  #   createNamespace: true
+  #   chart: metallb/metallb
+  #   version: 0.15.0
+  #   values:
+  #     - ./metallb/values.yaml
+  # alternative: kubectl patch svc kong-kong-proxy -n kong -p '{"spec":{"externalIPs":["192.168.100.51"]}}'
+
+  # - name: kong
+  #   namespace: kong
+  #   createNamespace: true
+  #   chart: kong/kong
+  #   version: 2.47.0
+  #   values:
+  #     - kong/values.yaml
+
+  - name: postgres
+    namespace: dev
+    createNamespace: true
+    chart: ./postgres 
+  
+  - name: elastic
+    namespace: dev
+    createNamespace: true
+    chart: ./elastic 
+
+  - name: kibana
+    namespace: dev
+    createNamespace: true
+    chart: ./kibana
+
+  # - name: app
+  #   namespace: app
+  #   createNamespace: true
+  #   chart: ./app
+  #   atomic: true
+
+  - name: nginx
+    namespace: dev
+    createNamespace: true
+    chart: ./microservices/nginx
+    atomic: true
