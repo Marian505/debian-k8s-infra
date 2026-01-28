@@ -60,87 +60,6 @@ ingress:
   labels: {}
   tls: []
 
-# apiServer:
-#   name: "api-server"
-#   containerPort: 8000
-#   deployment:
-#     replicaCount: 1
-#     labels: {}
-#     annotations: {}
-#     podSecurityContext: {}
-#     securityContext: {}
-#     priorityClassName: ""
-#     resources:
-#       limits:
-#         cpu: 2000m
-#         memory: 4Gi
-#       requests:
-#         cpu: 1000m
-#         memory: 2Gi
-#     extraEnv: []
-#     envFrom: []  # List of ConfigMap or Secret references to load environment variables from
-#     sidecars: []
-#     nodeSelector: {}
-#     tolerations: []
-#     affinity: {}
-#     volumes: []
-#     volumeMounts: []
-#     initContainers: []
-#     startupProbe:
-#       exec:
-#         command:
-#           - /bin/sh
-#           - -c
-#           - exec python /api/healthcheck.py
-#       failureThreshold: 6
-#       periodSeconds: 10
-#       timeoutSeconds: 1
-#     readinessProbe:
-#       exec:
-#         command:
-#           - /bin/sh
-#           - -c
-#           - exec python /api/healthcheck.py
-#       failureThreshold: 6
-#       periodSeconds: 10
-#       timeoutSeconds: 1
-#     livenessProbe:
-#       exec:
-#         command:
-#           - /bin/sh
-#           - -c
-#           - exec python /api/healthcheck.py
-#       failureThreshold: 6
-#       periodSeconds: 10
-#       timeoutSeconds: 1
-#   autoscaling:
-#     enabled: false
-#     minReplicas: 1
-#     maxReplicas: 5
-#     targetCPUUtilizationPercentage: 80
-#     keda:  #  KEDA autoscaling configuration. Recommended for autoscaling but only available if keda is installed in the cluster.
-#       enabled: false
-#       pollingInterval: 30
-#       cooldownPeriod: 300
-#       scaleDownStabilizationWindowSeconds: 300
-#   service:
-#     type: LoadBalancer
-#     httpPort: 80
-#     httpsPort: 443
-#     labels: {}
-#     annotations: {}
-#     loadBalancerSourceRanges: []
-#     loadBalancerIP: ""
-#   serviceAccount:
-#     create: true
-#     name: ""
-#     labels: {}
-#     annotations: {}
-#     automountServiceAccountToken: true
-#   pdb:
-#     enabled: false
-#     minAvailable: 1
-
 queue:
   enabled: false
   name: "queue"
@@ -155,10 +74,10 @@ queue:
     resources:
       limits:
         cpu: 500m
-        memory: 2Gi
+        memory: 1Gi
       requests:
         cpu: 300m
-        memory: 1Gi
+        memory: 500Mi
     extraEnv: []
     envFrom: []  # List of ConfigMap or Secret references to load environment variables from
     sidecars: []
@@ -252,7 +171,7 @@ postgres:
       size: 8Gi
       storageClassName: ""
   service:
-    type: ClusterIP
+    type: LoadBalancer
     port: 5432
     labels: {}
     annotations: {}
@@ -327,7 +246,7 @@ redis:
     volumes: []
     volumeMounts: []
   service:
-    type: ClusterIP
+    type: LoadBalancer
     port: 6379
     labels: {}
     annotations: {}

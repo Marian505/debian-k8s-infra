@@ -18,6 +18,10 @@ releases:
   - name: kibana
     chart: ./kibana
     namespace: dev
+  
+  - name: redisinsight
+    chart: ./redisinsight
+    namespace: dev
 
   # for local testing
    

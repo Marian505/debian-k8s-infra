@@ -1,0 +1,7 @@
+image:
+  repository: redislabs/redisinsight
+  tag: "latest"
+
+service:
+  type: LoadBalancer
+  port: 5540
