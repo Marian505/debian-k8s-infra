@@ -2,26 +2,28 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: postgres
-  labels:
-    {{- include "postgres.labels" . | nindent 4 }}
+  namespace: dev
 spec:
   serviceName: postgres-headless
   replicas: 1
   selector:
     matchLabels:
-      app: postgres
+      app.kubernetes.io/instance: postgres
   template:
     metadata:
       labels:
-        app: postgres
+        app.kubernetes.io/name: postgres
+        app.kubernetes.io/component: db
+        app.kubernetes.io/instance: postgres
     spec:
       containers:
       - name: postgres
         image: postgres:16
         ports:
         - containerPort: 5432
-          name: postgres
         env:
+        - name: POSTGRES_USER
+          value: admin
         - name: POSTGRES_PASSWORD
           value: postgres
         - name: POSTGRES_DB

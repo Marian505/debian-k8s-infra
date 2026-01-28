@@ -1,0 +1,168 @@
+{{- if not .Values.postgres.external.enabled }}
+{{- $volumes := concat .Values.commonVolumes .Values.postgres.statefulSet.volumes -}}
+{{- $volumeMounts := concat .Values.commonVolumeMounts .Values.postgres.statefulSet.volumeMounts -}}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "langGraphCloud.fullname" . }}-{{ .Values.postgres.name }}
+  namespace: {{ .Values.namespace | default .Release.Namespace | quote }}
+  labels:
+    {{- include "langGraphCloud.labels" . | nindent 4 }}
+    {{- with.Values.postgres.statefulSet.labels }}
+      {{- toYaml . | nindent 4 }}
+    {{- end }}
+  annotations:
+    {{- include "langGraphCloud.annotations" . | nindent 4 }}
+    {{- with.Values.postgres.statefulSet.annotations }}
+      {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  serviceName: {{ include "langGraphCloud.fullname" . }}-{{ .Values.postgres.name }}
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "langGraphCloud.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: {{ include "langGraphCloud.fullname" . }}-{{ .Values.postgres.name }}
+  template:
+    metadata:
+      {{- with .Values.postgres.statefulSet.annotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- with.Values.postgres.statefulSet.labels }}
+            {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- include "langGraphCloud.labels" . | nindent 8 }}
+        app.kubernetes.io/component: {{ include "langGraphCloud.fullname" . }}-{{ .Values.postgres.name }}
+    spec:
+      {{- with .Values.images.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.postgres.statefulSet.priorityClassName }}
+      priorityClassName: {{ .Values.postgres.statefulSet.priorityClassName }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.postgres.statefulSet.podSecurityContext | nindent 8 }}
+      serviceAccountName: {{ include "postgres.serviceAccountName" . }}
+      containers:
+        - name: {{ .Values.postgres.name }}
+          {{- with.Values.postgres.statefulSet.command }}
+          command:
+             {{ . }}
+          {{- end }}
+          env:
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "langGraphCloud.postgresSecretsName" .}}
+                  key: postgres_db
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "langGraphCloud.postgresSecretsName" .}}
+                  key: postgres_password
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "langGraphCloud.postgresSecretsName" .}}
+                  key: postgres_user
+            - name: PGDATA
+              value: /var/lib/postgresql/data/postgres
+            {{- with .Values.postgres.statefulSet.extraEnv }}
+              {{- toYaml . | nindent 12 }}
+            {{- end }}
+          image: {{ include "langGraphCloud.image" (dict "Values" .Values "Chart" .Chart "component" "postgresImage") | quote }}
+          imagePullPolicy: {{ .Values.images.postgresImage.pullPolicy }}
+          ports:
+            - name: postgres
+              containerPort: {{ .Values.postgres.containerPort }}
+              protocol: TCP
+          startupProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - exec pg_isready -d postgres -U postgres
+            failureThreshold: 6
+            periodSeconds: 10
+            timeoutSeconds: 1
+          readinessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - exec pg_isready -d postgres -U postgres
+            failureThreshold: 6
+            periodSeconds: 10
+            timeoutSeconds: 1
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - exec pg_isready -d postgres -U postgres
+            failureThreshold: 6
+            periodSeconds: 10
+            timeoutSeconds: 1
+          resources:
+            {{- toYaml .Values.postgres.statefulSet.resources | nindent 12 }}
+          securityContext:
+            {{- toYaml .Values.postgres.statefulSet.securityContext | nindent 12 }}
+          volumeMounts:
+            {{- with $volumeMounts }}
+              {{- toYaml . | nindent 12 }}
+            {{- end }}
+            {{- if .Values.postgres.statefulSet.persistence.enabled }}
+            - mountPath: /var/lib/postgresql/data
+              name: data
+              subPath: postgres
+            {{- end }}
+          {{- with .Values.postgres.statefulSet.extraContainerConfig }}
+            {{- toYaml . | nindent 10 }}
+          {{- end }}
+        {{- with .Values.postgres.statefulSet.sidecars }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- with .Values.postgres.statefulSet.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.postgres.statefulSet.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.postgres.statefulSet.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $volumes }}
+      volumes:
+          {{- toYaml . | nindent 8 }}
+      {{- end }}
+ {{- if .Values.postgres.statefulSet.persistence.enabled }}
+  {{- with .Values.postgres.statefulSet.persistentVolumeClaimRetentionPolicy }}
+  persistentVolumeClaimRetentionPolicy:
+        {{- toYaml . | nindent 4 }}
+  {{- end }}
+  volumeClaimTemplates:
+    - apiVersion: v1
+      kind: PersistentVolumeClaim
+      metadata:
+        name: data
+        labels:
+          {{- include "langGraphCloud.selectorLabels" . | nindent 10 }}
+          app.kubernetes.io/component: {{ include "langGraphCloud.fullname" . }}-{{ .Values.postgres.name }}
+      spec:
+
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: {{ .Values.postgres.statefulSet.persistence.size }}
+        {{- if .Values.postgres.statefulSet.persistence.storageClassName }}
+        storageClassName: {{ .Values.postgres.statefulSet.persistence.storageClassName }}
+        {{- end }}
+  {{- end }}
+{{- end}}

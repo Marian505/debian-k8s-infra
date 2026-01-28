@@ -1,23 +1,28 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: nginx-test
+  name: nginx
   namespace: dev
 spec:
   replicas: 1
   selector:
     matchLabels:
-        app.kubernetes.io/instance: nginx-test
+      app.kubernetes.io/instance: nginx
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: nginx-test
+        app.kubernetes.io/name: nginx
         app.kubernetes.io/component: frontend
-        app.kubernetes.io/instance: nginx-test
+        app.kubernetes.io/instance: nginx
     spec:
       containers:
-      - name: nginx-test
+      - name: nginx
         image: nginx
+        command: ["/bin/sh", "-c"]
+        args:
+        - |
+          echo "Hello from nginx pod!"
+          nginx -g "daemon off;" 
         resources:
           requests:
             memory: "128Mi"

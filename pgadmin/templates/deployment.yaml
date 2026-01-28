@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pgadmin
+  namespace: dev
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: pgadmin
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: pgadmin
+        app.kubernetes.io/component: frontend
+        app.kubernetes.io/instance: pgadmin
+    spec:
+      containers:
+      - name: pgadmin
+        image: dpage/pgadmin4:9.11.0
+        env:
+        - name: PGADMIN_DEFAULT_EMAIL
+          value: "a@a.a"
+        - name: PGADMIN_DEFAULT_PASSWORD
+          value: "admin"
+        ports:
+          - containerPort: 80

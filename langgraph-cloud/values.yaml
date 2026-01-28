@@ -1,0 +1,419 @@
+# Default values for the langGraph Cloud helm chart. Refer to documentation on individual values for help with configuration.
+
+# -- Provide a name in place of `langgraph-cloud` for the chart
+nameOverride: ""
+# -- String to fully override `"langgraph-cloud.fullname"`
+fullnameOverride: ""
+# -- Namespace to install the chart into. If not set, will use the namespace of the current context.
+namespace: ""
+# -- Annotations that will be applied to all resources created by the chart
+commonAnnotations: {}
+# -- Labels that will be applied to all resources created by the chart
+commonLabels: {}
+# -- Common volumes added to all deployments/statefulsets.
+commonVolumes: []
+# -- Common volume mounts added to all deployments/statefulsets.
+commonVolumeMounts: []
+
+images:
+  # -- If supplied, all children <image_name>.repository values will be prepended with this registry name + `/`
+  registry:
+    ""
+    # -- Secrets with credentials to pull images from a private registry. Specified as name: value.
+  imagePullSecrets: []
+  # This should be the image you have built using the LangGraph Cli. Find more information here:
+  # apiServerImage:
+  #   repository: "docker.io/langchain/langgraph-api"
+  #   pullPolicy: Always
+  #   tag: "3.11"
+  postgresImage:
+    repository: "pgvector/pgvector"
+    pullPolicy: IfNotPresent
+    tag: "pg16"
+  redisImage:
+    repository: "docker.io/redis"
+    pullPolicy: IfNotPresent
+    tag: "6"
+  studioImage:
+    repository: "docker.io/langchain/langgraph-debugger"
+    pullPolicy: Always
+    tag: "0.12.40"
+
+config:
+  existingSecretName: ""
+  # -- Optional LangGraph Cloud license key loaded from the chart secret.
+  langGraphCloudLicenseKey: ""
+  # -- Optional LangSmith API key mounted as LANGSMITH_API_KEY.
+  apiKey: ""
+  numberOfJobsPerWorker: 10  # Number of jobs per worker. Workers are bundled with the api server if queue is disabled."
+  auth:
+    enabled: false
+    langSmithAuthEndpoint: ""
+    langSmithTenantId: ""
+
+ingress:
+  enabled: false
+  hostname: ""  #  Set this to the hostname you want to use for the ingress.
+  studioHostname: ""  # Set this to the hostname you want to use for the studio ingress
+  ingressClassName: ""
+  annotations: {}
+  labels: {}
+  tls: []
+
+# apiServer:
+#   name: "api-server"
+#   containerPort: 8000
+#   deployment:
+#     replicaCount: 1
+#     labels: {}
+#     annotations: {}
+#     podSecurityContext: {}
+#     securityContext: {}
+#     priorityClassName: ""
+#     resources:
+#       limits:
+#         cpu: 2000m
+#         memory: 4Gi
+#       requests:
+#         cpu: 1000m
+#         memory: 2Gi
+#     extraEnv: []
+#     envFrom: []  # List of ConfigMap or Secret references to load environment variables from
+#     sidecars: []
+#     nodeSelector: {}
+#     tolerations: []
+#     affinity: {}
+#     volumes: []
+#     volumeMounts: []
+#     initContainers: []
+#     startupProbe:
+#       exec:
+#         command:
+#           - /bin/sh
+#           - -c
+#           - exec python /api/healthcheck.py
+#       failureThreshold: 6
+#       periodSeconds: 10
+#       timeoutSeconds: 1
+#     readinessProbe:
+#       exec:
+#         command:
+#           - /bin/sh
+#           - -c
+#           - exec python /api/healthcheck.py
+#       failureThreshold: 6
+#       periodSeconds: 10
+#       timeoutSeconds: 1
+#     livenessProbe:
+#       exec:
+#         command:
+#           - /bin/sh
+#           - -c
+#           - exec python /api/healthcheck.py
+#       failureThreshold: 6
+#       periodSeconds: 10
+#       timeoutSeconds: 1
+#   autoscaling:
+#     enabled: false
+#     minReplicas: 1
+#     maxReplicas: 5
+#     targetCPUUtilizationPercentage: 80
+#     keda:  #  KEDA autoscaling configuration. Recommended for autoscaling but only available if keda is installed in the cluster.
+#       enabled: false
+#       pollingInterval: 30
+#       cooldownPeriod: 300
+#       scaleDownStabilizationWindowSeconds: 300
+#   service:
+#     type: LoadBalancer
+#     httpPort: 80
+#     httpsPort: 443
+#     labels: {}
+#     annotations: {}
+#     loadBalancerSourceRanges: []
+#     loadBalancerIP: ""
+#   serviceAccount:
+#     create: true
+#     name: ""
+#     labels: {}
+#     annotations: {}
+#     automountServiceAccountToken: true
+#   pdb:
+#     enabled: false
+#     minAvailable: 1
+
+queue:
+  enabled: false
+  name: "queue"
+  containerPort: 8000
+  deployment:
+    replicaCount: 1
+    labels: {}
+    annotations: {}
+    podSecurityContext: {}
+    securityContext: {}
+    priorityClassName: ""
+    resources:
+      limits:
+        cpu: 500m
+        memory: 2Gi
+      requests:
+        cpu: 300m
+        memory: 1Gi
+    extraEnv: []
+    envFrom: []  # List of ConfigMap or Secret references to load environment variables from
+    sidecars: []
+    nodeSelector: {}
+    tolerations: []
+    affinity: {}
+    volumes: []
+    volumeMounts: []
+    startupProbe:
+      httpGet:
+        path: "/ok"
+        port: 8000
+      failureThreshold: 6
+      periodSeconds: 10
+      timeoutSeconds: 1
+    readinessProbe:
+      httpGet:
+        path: "/ok"
+        port: 8000
+      failureThreshold: 6
+      periodSeconds: 10
+      timeoutSeconds: 1
+    livenessProbe:
+      httpGet:
+        path: "/ok"
+        port: 8000
+      failureThreshold: 6
+      periodSeconds: 10
+      timeoutSeconds: 1
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 80
+    keda:  #  KEDA autoscaling configuration. Recommended for autoscaling but only available if keda is installed in the cluster.
+      enabled: false
+      pollingInterval: 30
+      cooldownPeriod: 300
+      scaleDownStabilizationWindowSeconds: 300
+  serviceAccount:
+    create: true
+    name: ""
+    labels: {}
+    annotations: {}
+    automountServiceAccountToken: true
+  pdb:
+    enabled: false
+    minAvailable: 1
+
+postgres:
+  name: "postgres"
+  external:
+    # If enabled, use the following values to connect to an external database. This will also disable the
+    # creation of a postgres stateful-set and service.
+    enabled: false
+    host: ""
+    port: "5432"
+    user: "postgres"
+    password: "postgres"
+    database: "postgres"
+    schema: "public"
+    connectionUrl: ""
+    existingSecretName: ""
+  containerPort: 5432
+  statefulSet:
+    labels: {}
+    annotations: {}
+    podSecurityContext: {}
+    securityContext: {}
+    priorityClassName: ""
+    resources:
+      limits:
+        cpu: 1000m
+        memory: 2Gi
+      requests:
+        cpu: 500m
+        memory: 1Gi
+    command: []
+    extraContainerConfig: {}
+    extraEnv: []
+    sidecars: []
+    nodeSelector: {}
+    tolerations: []
+    affinity: {}
+    volumes: []
+    volumeMounts: []
+    persistentVolumeClaimRetentionPolicy: {}
+    # TODO: temp disable
+    persistence:
+      enabled: false
+      size: 8Gi
+      storageClassName: ""
+  service:
+    type: ClusterIP
+    port: 5432
+    labels: {}
+    annotations: {}
+    loadBalancerSourceRanges: []
+    loadBalancerIP: ""
+  serviceAccount:
+    create: true
+    name: ""
+    labels: {}
+    annotations: {}
+    automountServiceAccountToken: true
+  pdb:
+    enabled: false
+    minAvailable: 1
+
+redis:
+  name: "redis"
+  external:
+    # If enabled, use the following values to connect to an external redis instance. This will also disable the
+    # creation of a redis stateful-set and service.
+    enabled: false
+    connectionUrl: ""
+    existingSecretName: ""
+  containerPort: 6379
+  deployment:
+    labels: {}
+    annotations: {}
+    podSecurityContext: {}
+    securityContext: {}
+    priorityClassName: ""
+    resources:
+      limits:
+        cpu: 1000m
+        memory: 2Gi
+      requests:
+        cpu: 500m
+        memory: 1Gi
+    command: []
+    startupProbe:
+      exec:
+        command:
+          - /bin/sh
+          - -c
+          - exec redis-cli ping
+      failureThreshold: 6
+      periodSeconds: 10
+      timeoutSeconds: 1
+    readinessProbe:
+      exec:
+        command:
+          - /bin/sh
+          - -c
+          - exec redis-cli ping
+      failureThreshold: 6
+      periodSeconds: 10
+      timeoutSeconds: 1
+    livenessProbe:
+      exec:
+        command:
+          - /bin/sh
+          - -c
+          - exec redis-cli ping
+      failureThreshold: 6
+      periodSeconds: 10
+      timeoutSeconds: 1
+    extraContainerConfig: {}
+    extraEnv: []
+    sidecars: []
+    nodeSelector: {}
+    tolerations: []
+    affinity: {}
+    volumes: []
+    volumeMounts: []
+  service:
+    type: ClusterIP
+    port: 6379
+    labels: {}
+    annotations: {}
+    loadBalancerSourceRanges: []
+    loadBalancerIP: ""
+  serviceAccount:
+    create: true
+    name: ""
+    labels: {}
+    annotations: {}
+    automountServiceAccountToken: true
+  pdb:
+    enabled: false
+    minAvailable: 1
+
+studio:
+  enabled: true
+  localGraphUrl: ""  #  Set this to api-server base url you want studio to point to by default.
+  name: "studio"
+  containerPort: 3968
+  deployment:
+    replicaCount: 1
+    labels: {}
+    annotations: {}
+    podSecurityContext: {}
+    securityContext: {}
+    priorityClassName: ""
+    resources:
+      limits:
+        cpu: 1000m
+        memory: 2Gi
+      requests:
+        cpu: 500m
+        memory: 1Gi
+    extraEnv: []
+    sidecars: []
+    nodeSelector: {}
+    tolerations: []
+    affinity: {}
+    volumes: []
+    volumeMounts: []
+    startupProbe:
+      httpGet:
+        path: /health
+        port: 3968
+      failureThreshold: 6
+      periodSeconds: 10
+      timeoutSeconds: 1
+    readinessProbe:
+      httpGet:
+        path: /health
+        port: 3968
+      failureThreshold: 3
+      periodSeconds: 10
+      timeoutSeconds: 1
+    livenessProbe:
+      httpGet:
+        path: /health
+        port: 3968
+      failureThreshold: 6
+      periodSeconds: 10
+      timeoutSeconds: 1
+  autoscaling:  #  Autoscaling configuration. Not generally needed for studio.
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 80
+    keda:  #  KEDA autoscaling configuration. Recommended for autoscaling but only available if keda is installed in the cluster.
+      enabled: false
+      pollingInterval: 30
+      cooldownPeriod: 300
+      scaleDownStabilizationWindowSeconds: 300
+  service:
+    type: LoadBalancer
+    httpPort: 80
+    httpsPort: 444
+    labels: {}
+    annotations: {}
+    loadBalancerSourceRanges: []
+    loadBalancerIP: ""
+  serviceAccount:
+    create: true
+    name: ""
+    labels: {}
+    annotations: {}
+    automountServiceAccountToken: true
+  pdb:
+    enabled: false
+    minAvailable: 1

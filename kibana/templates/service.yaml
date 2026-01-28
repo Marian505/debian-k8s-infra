@@ -2,13 +2,12 @@ apiVersion: v1
 kind: Service
 metadata:
   name: kibana
-  labels:
-    app: kibana
+  namespace: dev
 spec:
   type: ClusterIP
+  # type: LoadBalancer
+  selector:
+    app.kubernetes.io/instance: kibana
   ports:
   - port: 5601
-    targetPort: 5601
-    name: http
-  selector:
-    app: kibana
+    targetPort: 5601  
