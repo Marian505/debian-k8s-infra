@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ai-agent
+  namespace: dev
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: ai-agent
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: ai-agent
+        app.kubernetes.io/component: backend
+        app.kubernetes.io/instance: ai-agent
+    spec:
+      containers:
+      - name: ai-agent
+        image: my-agent:latest
+        imagePullPolicy: IfNotPresent 
+        env:
+          - name: PORT
+            value: '8000'
+          - name: POSTGRES_URI
+            value: "postgres://postgres:postgres@langgraph-cloud-postgres.dev.svc.cluster.local:5432/postgres?sslmode=disable" 
+          - name: REDIS_URI
+            value: "redis://langgraph-cloud-redis.dev.svc.cluster.local:6379"
+        ports:
+          - containerPort: 8000
