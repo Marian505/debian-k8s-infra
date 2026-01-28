@@ -4,8 +4,8 @@ metadata:
   name: kibana
   namespace: dev
 spec:
-  type: ClusterIP
-  # type: LoadBalancer
+  # type: ClusterIP
+  type: LoadBalancer
   selector:
     app.kubernetes.io/instance: kibana
   ports:
